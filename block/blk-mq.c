@@ -388,7 +388,7 @@ static struct request *blk_mq_get_request(struct request_queue *q,
 			if (e->type->icq_cache && rq_ioc(bio))
 				blk_mq_sched_assign_ioc(rq, bio);
 
-			e->type->ops.mq.prepare_request(rq, bio);
+			e->type->ops.mq.prepare_request(rq);
 			rq->rq_flags |= RQF_ELVPRIV;
 		}
 	}
