@@ -23,6 +23,7 @@
 #include <linux/i2c.h>
 #include <linux/interrupt.h>
 #include <linux/gpio.h>
+#include <uapi/linux/sched/types.h>
 //#include <linux/sys_config.h>
 
 #include "nano_macro.h"
@@ -400,11 +401,18 @@ int Nanosic_i2c_read_handler(void *data)
  ** */
 irqreturn_t Nanosic_i2c_irq(int irq, void *dev_id)
 {
+	static struct task_struct *nano_keyboard_task = NULL;
 	struct nano_i2c_client *i2c_client = (struct nano_i2c_client *)dev_id;
+	struct sched_param par = { .sched_priority = MAX_RT_PRIO - 1 };
 
 	if (IS_ERR_OR_NULL(i2c_client)) {
 		dbgprint(ERROR_LEVEL, "i2c_client is NULL\n");
 		return IRQ_HANDLED;
+	}
+
+	if (nano_keyboard_task == NULL) {
+		nano_keyboard_task = current;
+		sched_setscheduler_nocheck(nano_keyboard_task, SCHED_FIFO, &par);
 	}
 
 	Nanosic_workQueue_schedule(i2c_client->worker);
